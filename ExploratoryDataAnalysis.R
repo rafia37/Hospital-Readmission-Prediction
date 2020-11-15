@@ -4,13 +4,14 @@
 
 library(tidyverse)
 library(ggplot2)
+library(naniar)
 library(dplyr)
 library(mice)
 library(VIM)
 
 
 #Reading in train data
-train <- read.csv("../hm7-Train.csv")
+train <- read.csv("../hm7-Train.csv", na.strings = c("","NA","<NA>"))
 
 glimpse(train)
 
@@ -29,6 +30,31 @@ glimpse(train)
 #Complete Case Stats
 sum(complete.cases(train)) #Total number of complete cases
 (sum(complete.cases(train))/nrow(train))*100  #Percentage of complete cases
+
+#Changing other values to NAs
+train <- train %>% replace_with_na(replace = list(max_glu_serum="None", A1Cresult="None"))
+
+#Missing percentage
+colMeans(is.na.data.frame(train))
+
+#Dropping columns with high missing value percentages
+train <- select(train, -c(payer_code, medical_specialty, max_glu_serum, A1Cresult))
+(sum(complete.cases(train))/nrow(train))*100  #Percentage of complete cases
+
+#Observation
+#------------
+#Droping a few columns with high MV percentage 
+#shoots up the complete cases percentage from 28% to 98% 
+
+
+
+#Looking at histograms of some columns that I think are important
+train_numeric %>% gather() %>% head()
+ggplot(gather(train[11:16]), aes(value)) + 
+  geom_histogram() + 
+  facet_wrap(~key, scales = 'free') +
+  ggtitle("Histograms of numeric attributes")
+
 
 
 
