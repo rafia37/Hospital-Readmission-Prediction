@@ -47,6 +47,15 @@ train <- select(train, -c(payer_code, medical_specialty, max_glu_serum, A1Cresul
 #shoots up the complete cases percentage from 28% to 98% 
 
 
+#Looking at the number of levels of medication columns
+sapply(train[21:43], unique)
+
+
+#Observation
+#------------
+#glimepiride.pioglitazone, citoglipton, examide, has only one value "no". 
+#Which means these 3 are useless as predictors 
+
 
 #Looking at histograms of some columns that I think are important
 train_numeric %>% gather() %>% head()
