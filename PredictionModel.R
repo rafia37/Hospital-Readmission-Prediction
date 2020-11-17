@@ -47,6 +47,39 @@ write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 
 
 
+#Decision Tree
+#---------------
+
+split <- vector()
+ll <- vector()
+for (i in 10:30) {
+  tuning <- rpart.control(minsplit = 3,
+                          minbucket = round(5 / 3),
+                          maxdepth = i,
+                          cp = 0)
+  
+  fit_dt <- rpart(readmitted~.-patientID, data = new_train, method = 'class', control = tuning)
+  fit_dt
+  
+  a <- as.data.frame(predict(fit_dt, type="prob")) 
+  lloss <- logLoss(new_train$readmitted, as.numeric(unlist(a["1"])))
+  
+  split <- c(split, i)
+  ll <- c(ll, lloss)
+  
+  print(lloss)
+}
+
+pred_prob_dt <-predict(fit_dt, new_test, type = 'prob')
+new_test$predReadmit <- pred_prob_dt
+
+
+#model_eval()
+submission_dt <- select(new_test, c(patientID, predReadmit))
+write.csv(submission_dt, "../hm7-group11-submission_dt4.csv", row.names = FALSE)
+
+
+
 
 #Decision Tree with cross-validation
 #-----------------------------------
