@@ -4,6 +4,9 @@
 
 source("ModelEvaluator.R")
 library(tidyverse)
+library(caret)
+library(randomForest)
+library(e1071)
 library(rpart)
 
 #Reading in train and test data
@@ -14,7 +17,7 @@ test <- read.csv("../hm7-Test.csv", na.strings = c("","NA","<NA>"))
 #Choosing only predictor columns and target
 new_train <- select(train, -c(race, payer_code, diagnosis, medical_specialty, max_glu_serum:metformin.pioglitazone))
 new_test <- select(test, -c(race, payer_code, diagnosis, medical_specialty, max_glu_serum:metformin.pioglitazone))
-
+new_train$readmitted <- as.factor(new_train$readmitted)
 #new_train <- drop_na(new_train)
 
 #Fitting logistic regression model
@@ -52,7 +55,7 @@ write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 
 split <- vector()
 ll <- vector()
-for (i in 10:30) {
+for (i in 10:15) {
   tuning <- rpart.control(minsplit = 3,
                           minbucket = round(5 / 3),
                           maxdepth = i,
@@ -119,4 +122,30 @@ write.csv(submission_dt, "../hm7-group11-submission_dt1.csv", row.names = FALSE)
 
 
 
+
+#Random Forest
+#--------------
+
+#cross validation using grid search repeated 10 times
+control <- trainControl(method = "cv", number = 10, search="grid")
+
+set.seed(5103)
+
+#train model
+
+for (i in 1:15*100) {
+  fit_rf <- randomForest(readmitted ~ .-patientID, data = new_train, mtry=1, ntree = i, 
+                         maxnodes=12)
+  
+  ll <- logLoss(fit_rf)
+  print(ll)
+}
+
+pred_prob_rf <- predict(fit_rf, new_test, type="prob")
+new_test$predReadmit <- pred_prob_rf
+
+
+#model_eval()
+submission_dt <- select(new_test, c(patientID, predReadmit))
+write.csv(submission_dt, "../hm7-group11-submission_rf.csv", row.names = FALSE)
 
