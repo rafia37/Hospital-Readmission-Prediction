@@ -11,12 +11,12 @@ library(rpart.plot)
 
 
 
-model_eval <- function(fit, df){
+model_eval <- function(fit, df, target){
   
   
   #####Confusion Matrix & Statistics#####
   print("#####Confusion Matrix & Statistics#####")
-  cmat <- confusionMatrix(as.factor(df$pred), as.factor(df$targ), positive="1")
+  cmat <- confusionMatrix(as.factor(df$pred), as.factor(df[target]))
   print(cmat)
   #####End of Confusion Matrix  & Statistics#####
   
