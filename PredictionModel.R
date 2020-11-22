@@ -13,10 +13,12 @@ library(neuralnet) # Used for neuralnet function
 library(readr) # To read csv files
 library(caTools) # To split data
 library(Metrics) # To calculate RMSE value
+library(Matrix)
+library(glmnet)
 
 #Reading in train and test data
-train <- read.csv("../cleaned_train_data.csv", na.strings = c("","NA","<NA>"))
-test <- read.csv("../cleaned_test_data.csv", na.strings = c("","NA","<NA>"))
+train <- read.csv("cleaned_train_data.csv", na.strings = c("","NA","<NA>"))
+test <- read.csv("cleaned_test_data.csv", na.strings = c("","NA","<NA>"))
 
 
 
@@ -40,6 +42,44 @@ test$predReadmit <- pred_prob
 #Writing Submission file
 submission <- select(test, c(patientID, predReadmit))
 write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
+
+
+
+
+#Penalized Logistic Regression
+#-------------------------------
+x = model.matrix(readmitted~.,data=train[,-1])
+y = ifelse(train$readmitted == "pos",1,0)
+
+x = model.matrix(readmitted~.,data=train[,-c(1)])
+y = train[,30]
+
+cv.lasso <- cv.glmnet(x,y,alpha=0,family="binomial")
+print(cv.lasso$lambda.min)
+
+fit <- glmnet(x,y,alpha=0,family="binomial",lambda=0.5)
+
+plot(cv.lasso)
+print(cv.lasso$lambda.min)
+
+x.test <- model.matrix(~.,data=test)
+predicted.classes = 0
+
+probabilities <- fit %>% predict(newx=x.test)
+predicted.classes <- ifelse(probabilities > 0.0001, 1, 0)
+
+sum(predicted.classes)
+
+x.test <- model.matrix(readmitted~., test)
+fit = glmnet(x=train_[,2:29],y=train_[,30],family="binomial",alpha=0.2,nlambda=20)
+plot(fit)
+coef(fit,s=0.1)
+
+cvfit = cv.glmnet(x=train_[,2:29],y=train_[,30])
+plot(cvfit)
+cvfit$lambda.min
+coef(cvfit, s = "lambda.min")
+cvfit$glmnet.fit
 
 
 
