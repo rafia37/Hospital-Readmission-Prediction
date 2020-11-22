@@ -37,7 +37,7 @@ pred_prob <- predict(fit, test, type = "response")
 test$predReadmit <- pred_prob
 
 
-#model_eval()
+#Writing Submission file
 submission <- select(test, c(patientID, predReadmit))
 write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 
@@ -47,9 +47,9 @@ write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 #---------------
 split <- vector()
 ll <- vector()
-for (i in 1:10) {
-  tuning <- rpart.control(minsplit = 3,
-                          minbucket = 5,
+for (i in 10:30) {
+  tuning <- rpart.control(minsplit = 2,
+                          minbucket = 2,
                           maxdepth = i,
                           cp = 0)
   
@@ -64,13 +64,19 @@ for (i in 1:10) {
   print(lloss)
 }
 
+
+#Predicting test data
 pred_prob_dt <-predict(fit_dt, test, type = 'prob')
 test$predReadmit <- pred_prob_dt
 
 
-#model_eval()
+#Evaluating model
+train$pred<-predict(fit_dt, type = 'class')
+model_eval(fit_dt, train)
+
+
 submission_dt <- select(test, c(patientID, predReadmit))
-write.csv(submission_dt, "../hm7-group11-submission_dt4.csv", row.names = FALSE)
+write.csv(submission_dt, "../hm7-group11-submission_dt5.csv", row.names = FALSE)
 
 
 
@@ -122,21 +128,28 @@ control <- trainControl(method = "cv", number = 10, search="grid")
 
 set.seed(5103)
 
+train$readmitted <- as.factor(train$readmitted)
+
 #train model
 
-for (i in 10:30) {
-  fit_rf <- randomForest(readmitted ~ .-patientID, data = train, mtry=2, ntree = 50, 
-                         maxnodes=i)
+for (i in 1:14) {
+  fit_rf <- randomForest(readmitted ~ .-patientID, data = train, mtry=i, ntree = 300, 
+                         maxnodes=15)
   
   ll <- logLoss(fit_rf)
   print(ll)
 }
 
+#predicting test set
 pred_prob_rf <- predict(fit_rf, test, type="prob")
 test$predReadmit <- pred_prob_rf
 
 
-#model_eval()
+#Evaluating model
+train$pred<-predict(fit_rf, type = 'class')
+model_eval(fit_rf, train)
+
+
 submission_dt <- select(test, c(patientID, predReadmit))
 write.csv(submission_dt, "../hm7-group11-submission_rf.csv", row.names = FALSE)
 
@@ -149,15 +162,19 @@ write.csv(submission_dt, "../hm7-group11-submission_rf.csv", row.names = FALSE)
 fit_svm <- svm(readmitted ~ .-patientID, data = train, type="C-classification",
                kernel="linear", probability=TRUE)
 
-a <- predict(fit_svm, probability = TRUE)
 
 pred_prob_svm <- predict(fit_svm, test, probability = TRUE)
 test$predReadmit <- attr(pred_prob_svm, "probabilities")
 
 
-#model_eval()
+
 submission_svm <- select(test, c(patientID, predReadmit))
-write.csv(submission_svm, "../hm7-group11-submission_svm_poly.csv", row.names = FALSE)
+write.csv(submission_svm, "../hm7-group11-submission_svm.csv", row.names = FALSE)
+
+
+#Evaluating model
+train$pred<-predict(fit_svm, probability = TRUE)
+model_eval(fit_svm, train)
 
 
 
