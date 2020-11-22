@@ -11,14 +11,22 @@ library(rpart.plot)
 
 
 
-model_eval <- function(fit, df, target){
+model_eval <- function(fit, df){
   
   
   #####Confusion Matrix & Statistics#####
   print("#####Confusion Matrix & Statistics#####")
-  cmat <- confusionMatrix(as.factor(df$pred), as.factor(df[target]))
+  cmat <- caret::confusionMatrix(as.factor(df$pred), as.factor(df$readmitted), positive="1")
   print(cmat)
   #####End of Confusion Matrix  & Statistics#####
+  
+  
+  
+  #####Kappa#####
+  kp <- kappa(train$readmitted, train$pred)
+  cat("Kappa: ", kp, "\n")
+  #####End of Kappa#####
+  
   
   
   
@@ -40,7 +48,7 @@ model_eval <- function(fit, df, target){
   
   
   #####D Statistic#####
-  predVals <-  data.frame(trueVal=df$targ, predClass=df$pred, predProb=fitted(fit))
+  predVals <-  data.frame(trueVal=df$readmitted, predClass=df$pred, predProb=fitted(fit))
   df.1<-predVals[predVals$trueVal==1,]
   df.0<-predVals[predVals$trueVal==0,]
   
@@ -76,10 +84,10 @@ model_eval <- function(fit, df, target){
   
   
   #####Log Loss#####
-  ll <- logLoss(df$targ, df$pred)
+  ll <- logLoss(df$readmitted, df$pred)
   cat("Log Loss: ", ll, "\n")
   #####End of Log Loss#####
   
-  output <- list("cMat" = cmat, "auroc" = auroc, "D_Stat" = dStat, "F1_Score" = f1, "MCC" = mcc, "LogLoss" = ll)
+  output <- list("cMat" = cmat, "kappa" = kp,"auroc" = auroc, "D_Stat" = dStat, "F1_Score" = f1, "MCC" = mcc, "LogLoss" = ll)
   return(output)
 }
