@@ -48,39 +48,25 @@ write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 
 #Penalized Logistic Regression
 #-------------------------------
-x = model.matrix(readmitted~.,data=train[,-1])
-y = ifelse(train$readmitted == "pos",1,0)
+train$readmitted = as.factor(train$readmitted)
+trctrl <- trainControl(method = "cv",number=10)
+enetFit <- train(readmitted~., data = train,
+                 method = "glmnet",
+                 trControl=trctrl,
+                 tuneGrid = data.frame(alpha=1,
+                                       lambda=seq(0.0,0.7,0.05)))
 
-x = model.matrix(readmitted~.,data=train[,-c(1)])
-y = train[,30]
+enetFit$bestTune
 
-cv.lasso <- cv.glmnet(x,y,alpha=0,family="binomial")
-print(cv.lasso$lambda.min)
+train$pred=predict(enetFit, train)
 
-fit <- glmnet(x,y,alpha=0,family="binomial",lambda=0.5)
 
-plot(cv.lasso)
-print(cv.lasso$lambda.min)
+model_eval(enetFit, train)
+enetFit$bestTune
+test$predReadmit = predict(enetFit,test)
 
-x.test <- model.matrix(~.,data=test)
-predicted.classes = 0
-
-probabilities <- fit %>% predict(newx=x.test)
-predicted.classes <- ifelse(probabilities > 0.0001, 1, 0)
-
-sum(predicted.classes)
-
-x.test <- model.matrix(readmitted~., test)
-fit = glmnet(x=train_[,2:29],y=train_[,30],family="binomial",alpha=0.2,nlambda=20)
-plot(fit)
-coef(fit,s=0.1)
-
-cvfit = cv.glmnet(x=train_[,2:29],y=train_[,30])
-plot(cvfit)
-cvfit$lambda.min
-coef(cvfit, s = "lambda.min")
-cvfit$glmnet.fit
-
+submission_plrm <- select(test, c(patientID, predReadmit))
+write.csv(submission_plrm, "../hm7-group11-submission_plrm.csv", row.names = FALSE)
 
 
 #Decision Tree
