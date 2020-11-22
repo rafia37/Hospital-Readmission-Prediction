@@ -1,0 +1,3 @@
+http://www.sthda.com/english/articles/36-classification-methods-essentials/149-penalized-logistic-regression-essentials-in-r-ridge-lasso-and-elastic-net/
+
+https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html
