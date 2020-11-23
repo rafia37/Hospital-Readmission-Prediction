@@ -1,6 +1,10 @@
-#Predicting Hospital readmissions using different models
-#Author - Rafia Bushra
-#Date Created - 11/15/20
+#DSA 5103 - Homework 7
+#Group 11 - Michael Montalbano, Nik Frost, Rafia Bushra
+#Predicting (Classifying) Hospital Readmission using supervised learning methods
+#Methods Used - Logistic Regression, Penalized Logistic Regression, Decision Tree,
+               #Random Forest, Support Vector Machine
+#Models Evaluated using - Confusion Matrix, Kappa, D Statistic, F1 Score, 
+                         #Matthews correlation coefficient, Log Loss 
 
 library(tidyverse)
 library(caret)
@@ -108,6 +112,10 @@ model_eval <- function(fit, df){
   return(output)
 }
 
+
+
+
+
 #Clean Data
 #-------------
 #Reading in data
@@ -176,13 +184,20 @@ train <-drop_na(train)
 #------------------------------------------------------------------------
 
 
+
+
 #Write cleaned files
 write.csv(train, "cleaned_train_data.csv", row.names = FALSE)
 write.csv(test, "cleaned_test_data.csv", row.names = FALSE)
 
 #Reading in train and test data
-train <- read.csv("cleaned_train_data.csv", na.strings = c("","NA","<NA>"))
-test <- read.csv("cleaned_test_data.csv", na.strings = c("","NA","<NA>"))
+train <- read.csv("../cleaned_train_data.csv", na.strings = c("","NA","<NA>"))
+test <- read.csv("../cleaned_test_data.csv", na.strings = c("","NA","<NA>"))
+
+
+
+
+
 
 #Logistic Regression
 #--------------------
@@ -238,6 +253,8 @@ influencePlot(fit,main="Influence Plot")
 print(vif(fit))
 
 
+
+
 #Penalized Logistic Regression
 #-------------------------------
 train$readmitted = as.factor(train$readmitted)
@@ -261,6 +278,8 @@ submission_plrm <- select(test, c(patientID, predReadmit))
 write.csv(submission_plrm, "../hm7-group11-submission_plrm.csv", row.names = FALSE)
 
 
+
+
 #Decision Tree
 #---------------
 split <- vector()
@@ -268,7 +287,7 @@ ll <- vector()
 for (i in 10:30) {
   tuning <- rpart.control(minsplit = 2,
                           minbucket = 2,
-                          maxdepth = i,
+                          maxdepth = 22,
                           cp = 0)
   
   fit_dt <- rpart(readmitted~.-patientID, data = train, method = 'class', control = tuning)
