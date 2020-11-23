@@ -221,32 +221,14 @@ write.csv(submission, "../hm7-group11-submission.csv", row.names = FALSE)
 
 #Metrics for Logistic Regression
 #----------------------------
-print(summary(fit))
-print(exp(coef(fit)))
 
-#calculate residuals
-pearsonRes <-residuals(fit,type="pearson")
-devianceRes <-residuals(fit,type="deviance")
-rawRes <-residuals(fit,fit="response")
-studentDevRes<-rstudent(fit)
-fv<-fitted(fit)
+# cumulative gains chart
+train$cumden <- cumsum(train$pred)/sum(train$pred)
+train$perpop <- (seq(nrow(train))/nrow(train))*100
 
-train$pred <- as.numeric(fit$fitted.values>0.5)
-predVals <- data.frame(trueVal=train$readmitted, predClass=train$pred, predProb=fv, 
-                       rawRes, pearsonRes, devianceRes, studentDevRes)
-tail(predVals)
+plot(train$perpop, train$cumden,type="l", xlab = "% of Patients",ylab="% of readmittance",main="Cumulative lift")
 
-
-plot(studentDevRes,main="studentDevRes")
-barplot(studentDevRes,main="studentDevRes")
-
-plot(predict(fit),residuals(fit),main="Predicted Values vs Residuals")  #plot predicted value vs residuals
-abline(h=0,lty=2,col="grey")
-
-plot(predict(fit),residuals(fit),main="Predicted Values vs Residuals",col=c("blue","red")[1+train$readmitted])
-abline(h=0,lty=2,col="grey")
-
-barplot(cooks.distance(fit),main="Cooks Distance")
+# to measure the importance of variables/useful for comparing models
 influence.measures(fit)
 influencePlot(fit,main="Influence Plot")
 
@@ -263,7 +245,7 @@ enetFit <- train(readmitted~., data = train,
                  method = "glmnet",
                  trControl=trctrl,
                  tuneGrid = data.frame(alpha=1,
-                                       lambda=seq(0.0,0.7,0.05)))
+                                       lambda=seq(0.0,0.9,0.05)))
 
 enetFit$bestTune
 
